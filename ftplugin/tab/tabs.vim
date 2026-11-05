@@ -2,10 +2,10 @@
 " Author: Andrew Kingery
 " Version: 0.2
 
-if exists("g:loaded_VimTabs")
+if exists("b:did_ftplugin")
     finish
 endif
-let g:loaded_VimTabs = 1
+let b:did_ftplugin = 1
 
 let s:tuning=['e', 'B', 'G', 'D', 'A', 'E']
 
@@ -83,40 +83,57 @@ endfunction
 
 " Mapping for String Lines
 
+" Set local leader unless the user has his own localleader
+let s:set_leader = !exists('g:maplocalleader')
+if s:set_leader
+    let maplocalleader = "-"
+endif
 " chord completion
-let maplocalleader = "-"
 for c in keys(g:Chords)
-    silent execute "nnoremap <localleader>". c." :call <SID>Chord(\"". c. "\")<CR>"
+    silent execute "nnoremap <buffer> <localleader>". c." :call <SID>Chord(\"". c. "\")<CR>"
 endfor
 
 " Mapping to draw bars with -| in normal mode and | in insert/replace mode
-nnoremap <silent> <expr> <localleader>\| <SID>OnStringLine() ? ':call tabs#DrawBars()<CR>':''
-inoremap <silent> <expr> \| <SID>OnStringLine() ? '<esc>l:call tabs#DrawBars()<CR>lgR':'\|'
+nnoremap <buffer> <silent> <expr> <localleader>\| <SID>OnStringLine() ? ':call tabs#DrawBars()<CR>':''
+inoremap <buffer> <silent> <expr> \| <SID>OnStringLine() ? '<esc>l:call tabs#DrawBars()<CR>lgR':'\|'
 
 " selections
 nnoremap <buffer> <expr> <S-v> <SID>OnStringLine() ? ':call <SID>ToFirstLine()<CR><C-v>5j':'<S-v>'
 nnoremap <buffer> <expr> yy <SID>OnStringLine() ? ':call <SID>YankStaff(v:register)<CR>':'yy'
 
 " movement
-inoremap <expr> <Tab> <SID>OnStringLine() ? '<esc>jlgR':'<Tab>'
-inoremap <expr> <S-Tab> <SID>OnStringLine() ? '<esc>klgR':'<S-Tab>'
+inoremap <buffer> <expr> <Tab> <SID>OnStringLine() ? '<esc>jlgR':'<Tab>'
+inoremap <buffer> <expr> <S-Tab> <SID>OnStringLine() ? '<esc>klgR':'<S-Tab>'
 
 " map insert mode to Replace mode if cursor on a string line
-nnoremap <expr> i <SID>OnStringChar() ? 'gR':'i'
-nnoremap <expr> a <SID>OnStringLine() ? 'lgR':'a'
-nnoremap <expr> I <SID>OnStringLine() ? 'T<Bar>gR':'I'
-nnoremap <expr> A <SID>OnStringLine() ? 'f<Bar>lR':'A'
-inoremap <expr> <space> <SID>OnStringLine() ? '-':'<space>'
+nnoremap <buffer> <expr> i <SID>OnStringChar() ? 'gR':'i'
+nnoremap <buffer> <expr> a <SID>OnStringLine() ? 'lgR':'a'
+nnoremap <buffer> <expr> I <SID>OnStringLine() ? 'T<Bar>gR':'I'
+nnoremap <buffer> <expr> A <SID>OnStringLine() ? 'f<Bar>lR':'A'
+inoremap <buffer> <expr> <space> <SID>OnStringLine() ? '-':'<space>'
 
 " replace deleted things with hyphens
-nnoremap <silent> <expr> d <SID>OnStringLine() ? ':set opfunc=<SID>HyphenDelete<CR>g@':'d'
-vnoremap <expr> d <SID>OnStringLine() ? 'r-':'d'
-nnoremap <silent> <expr> c <SID>OnStringLine() ? ':set opfunc=<SID>HyphenChange<CR>g@':'c'
-vnoremap <expr> c <SID>OnStringLine() ? 'r-gR':'c'
-nnoremap <expr> C <SID>OnStringLine() ? 'v$r-gR':'C'
-nnoremap <expr> x <SID>OnStringLine() ? 'r-':'x'
-nnoremap <expr> s <SID>OnStringLine() ? 'r-gR':'s'
+nnoremap <buffer> <silent> <expr> d <SID>OnStringLine() ? ':set opfunc=<SID>HyphenDelete<CR>g@':'d'
+vnoremap <buffer> <expr> d <SID>OnStringLine() ? 'r-':'d'
+nnoremap <buffer> <silent> <expr> c <SID>OnStringLine() ? ':set opfunc=<SID>HyphenChange<CR>g@':'c'
+vnoremap <buffer> <expr> c <SID>OnStringLine() ? 'r-gR':'c'
+nnoremap <buffer> <expr> C <SID>OnStringLine() ? 'v$r-gR':'C'
+nnoremap <buffer> <expr> x <SID>OnStringLine() ? 'r-':'x'
+nnoremap <buffer> <expr> s <SID>OnStringLine() ? 'r-gR':'s'
 
-if !filereadable(expand('%'))
+" plugin undo for `set ft=`
+let s:lead = substitute(maplocalleader, ' ', '<Space>', 'g')
+let s:undo = map(keys(g:Chords) + ['<Bar>'], '"nunmap <buffer> " . s:lead . v:val')
+let s:undo += map(['<S-v>', 'yy', 'i', 'a', 'I', 'A', 'd', 'c', 'C', 'x', 's'], '"nunmap <buffer> " . v:val')
+let s:undo += map(['<Bar>', '<Tab>', '<S-Tab>', '<Space>'], '"iunmap <buffer> " . v:val')
+let s:undo += ['vunmap <buffer> d', 'vunmap <buffer> c']
+" No spaces before '|': unmap treats trailing whitespace as part of the lhs.
+let b:undo_ftplugin = 'silent! ' . join(s:undo, '|silent! ')
+
+if s:set_leader
+    unlet maplocalleader
+endif
+
+if !filereadable(expand('%')) && line('$') == 1 && getline(1) ==# ''
     call s:InitTab(60)
 endif
