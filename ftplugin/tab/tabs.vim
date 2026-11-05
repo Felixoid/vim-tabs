@@ -27,6 +27,7 @@ function! tabs#DrawBars()
     let l:jump_back = s:OnFirstLine()
     call s:ToFirstLine()
     silent execute "normal! \<C-v>5jr|"
+    call s:ClearNames(col('.'), col('.'))
     if !l:jump_back
         silent execute "normal! \<C-o>"
     endif
@@ -81,6 +82,44 @@ function! s:YankStaff(register)
     call setpos('.', l:pos)
 endfunction
 
+function! s:ClearColumns(count)
+    " Columns 1 and 2 hold the string name and the opening bar.
+    if col('.') < 3
+        return
+    endif
+    let l:pos = getcurpos()
+    call s:ToFirstLine()
+    let l:col = col('.')
+    let l:count = min([a:count, col('$') - l:col])
+    silent execute "normal! \<C-v>5j" . repeat('l', l:count - 1) . 'r-'
+    call s:ClearNames(l:col, l:col + l:count - 1)
+    call cursor(l:pos[1], l:pos[2] + a:count)
+endfunction
+
+" Blanks the chord names that start in columns first to last; s:Chord() puts a
+" name above the staff, starting at its chord's column.
+function! s:ClearNames(first, last)
+    let l:pos = getcurpos()
+    call s:ToFirstLine()
+    let l:names = line('.') - 1
+    for l:c in range(a:first, a:last)
+        if l:names > 0 && getline(l:names)[l:c - 1] =~# '\S' && getline(l:names)[l:c - 2] !~# '\S'
+            call cursor(l:names, l:c)
+            silent execute "normal! viWr\<Space>"
+            call setline(l:names, substitute(getline(l:names), '\s\+$', '', ''))
+        endif
+    endfor
+    call setpos('.', l:pos)
+endfunction
+
+" Only a block over all six strings removes whole chords.
+function! s:ClearVisualNames()
+    if visualmode() !=# "\<C-v>" || !s:OnFirstLine() || line("'>") - line("'<") < 5
+        return
+    endif
+    call s:ClearNames(min([col("'<"), col("'>")]), max([col("'<"), col("'>")]))
+endfunction
+
 " Mapping for String Lines
 
 " Set local leader unless the user has his own localleader
@@ -115,17 +154,18 @@ inoremap <buffer> <expr> <Space> <SID>OnStringLine() ? '-' : '<Space>'
 " replace deleted things with hyphens
 " <C-u> drops the count from the command line, so pass it on to g@.
 nnoremap <buffer> <silent> <expr> d <SID>OnStringLine() ? ':<C-u>set opfunc=<SID>HyphenDelete<CR>' . v:count1 . 'g@' : 'd'
-vnoremap <buffer> <expr> d <SID>OnStringLine() ? 'r-' : 'd'
+vnoremap <buffer> <silent> <expr> d <SID>OnStringLine() ? 'r-:<C-u>call <SID>ClearVisualNames()<CR>' : 'd'
 nnoremap <buffer> <silent> <expr> c <SID>OnStringLine() ? ':<C-u>set opfunc=<SID>HyphenChange<CR>' . v:count1 . 'g@' : 'c'
-vnoremap <buffer> <expr> c <SID>OnStringLine() ? 'r-gR' : 'c'
+vnoremap <buffer> <silent> <expr> c <SID>OnStringLine() ? 'r-:<C-u>call <SID>ClearVisualNames()<CR>gR' : 'c'
 nnoremap <buffer> <expr> C <SID>OnStringLine() ? 'v$r-gR' : 'C'
 nnoremap <buffer> <expr> x <SID>OnStringLine() ? 'r-' : 'x'
 nnoremap <buffer> <expr> s <SID>OnStringLine() ? 'r-gR' : 's'
+nnoremap <buffer> <silent> <expr> X <SID>OnStringLine() ? ':<C-u>call <SID>ClearColumns(' . v:count1 . ')<CR>' : 'X'
 
 " plugin undo for `set ft=`
 let s:lead = substitute(maplocalleader, ' ', '<Space>', 'g')
 let s:undo = map(keys(g:Chords) + ['<Bar>'], '"nunmap <buffer> " . s:lead . v:val')
-let s:undo += map(['<S-v>', 'yy', 'i', 'a', 'I', 'A', 'd', 'c', 'C', 'x', 's'], '"nunmap <buffer> " . v:val')
+let s:undo += map(['<S-v>', 'yy', 'i', 'a', 'I', 'A', 'd', 'c', 'C', 'x', 'X', 's'], '"nunmap <buffer> " . v:val')
 let s:undo += map(['<Bar>', '<Tab>', '<S-Tab>', '<Space>'], '"iunmap <buffer> " . v:val')
 let s:undo += ['vunmap <buffer> d', 'vunmap <buffer> c']
 " No spaces before '|': unmap treats trailing whitespace as part of the lhs.
