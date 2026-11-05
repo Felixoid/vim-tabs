@@ -33,15 +33,15 @@ function! tabs#DrawBars()
 endfunction
 
 function! s:OnStringLine()
-    return getline(line('.')) =~ "^[a-gA-G]\|.*-*.*"
+    return getline('.') =~# '^[a-gA-G]|'
 endfunction
 
 function! s:OnStringChar()
-    return s:OnStringLine() && getline('.')[col('.')-1] == "-"
+    return s:OnStringLine() && getline('.')[col('.') - 1] ==# '-'
 endfunction
 
 function! s:OnFirstLine()
-    return getline('.')[0:1] == s:tuning[0]."|"
+    return getline('.')[0:1] ==# s:tuning[0] . '|'
 endfunction
 
 function! s:HyphenDelete(type)
@@ -58,7 +58,7 @@ function! s:ToFirstLine()
     if s:OnFirstLine()
         return
     endif
-    silent execute "normal! ?^". s:tuning[0]. "|?s+". (col(".")-1). "\<CR>"
+    silent execute 'normal! ?\C^' . s:tuning[0] . '|?s+' . (col('.') - 1) . "\<CR>"
 endfunction
 
 function! s:Chord(Letter)
@@ -113,9 +113,10 @@ nnoremap <buffer> <expr> A <SID>OnStringLine() ? 'f<Bar>lR' : 'A'
 inoremap <buffer> <expr> <Space> <SID>OnStringLine() ? '-' : '<Space>'
 
 " replace deleted things with hyphens
-nnoremap <buffer> <silent> <expr> d <SID>OnStringLine() ? ':set opfunc=<SID>HyphenDelete<CR>g@':'d'
-nnoremap <buffer> <silent> <expr> c <SID>OnStringLine() ? ':set opfunc=<SID>HyphenChange<CR>g@':'c'
+" <C-u> drops the count from the command line, so pass it on to g@.
+nnoremap <buffer> <silent> <expr> d <SID>OnStringLine() ? ':<C-u>set opfunc=<SID>HyphenDelete<CR>' . v:count1 . 'g@' : 'd'
 vnoremap <buffer> <expr> d <SID>OnStringLine() ? 'r-' : 'd'
+nnoremap <buffer> <silent> <expr> c <SID>OnStringLine() ? ':<C-u>set opfunc=<SID>HyphenChange<CR>' . v:count1 . 'g@' : 'c'
 vnoremap <buffer> <expr> c <SID>OnStringLine() ? 'r-gR' : 'c'
 nnoremap <buffer> <expr> C <SID>OnStringLine() ? 'v$r-gR' : 'C'
 nnoremap <buffer> <expr> x <SID>OnStringLine() ? 'r-' : 'x'
