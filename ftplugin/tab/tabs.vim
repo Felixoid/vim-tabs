@@ -58,7 +58,7 @@ function! s:ToFirstLine()
     if s:OnFirstLine()
         return
     endif
-    silent execute "normal! ?". s:tuning[0]. "?s+". (col(".")-1). "\<CR>"
+    silent execute "normal! ?^". s:tuning[0]. "|?s+". (col(".")-1). "\<CR>"
 endfunction
 
 function! s:Chord(Letter)
