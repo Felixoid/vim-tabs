@@ -18,8 +18,8 @@ function! s:InitTab(length)
 endfunction
 
 function! tabs#DrawStrings(length)
-    for @s in s:tuning
-        silent execute "normal! i\<C-R>s|\<C-o>". a:length. "a-\<esc>a|\<esc>o"
+    for l:string in s:tuning
+        silent execute "normal! i". l:string. "|\<C-o>". a:length. "a-\<esc>a|\<esc>o"
     endfor
 endfunction
 
@@ -62,16 +62,23 @@ function! s:ToFirstLine()
 endfunction
 
 function! s:Chord(Letter)
-    normal mm
+    let l:pos = getcurpos()
     call s:ToFirstLine()
     let l:col = col('.')
     set ve=all
     silent execute "normal! kR". a:Letter. "\<esc>j". l:col. "|"
     set ve=
-    for @r in g:Chords[a:Letter]
-        silent execute "normal! s\<C-R>r\<esc>j"
+    for l:fret in g:Chords[a:Letter]
+        silent execute "normal! \"_s". l:fret. "\<esc>j"
     endfor
-    normal `m
+    call setpos('.', l:pos)
+endfunction
+
+function! s:YankStaff(register)
+    let l:pos = getcurpos()
+    call s:ToFirstLine()
+    silent execute "normal! \<C-v>5j\"". a:register. "y"
+    call setpos('.', l:pos)
 endfunction
 
 " Mapping for String Lines
@@ -87,8 +94,8 @@ nnoremap <silent> <expr> <localleader>\| <SID>OnStringLine() ? ':call tabs#DrawB
 inoremap <silent> <expr> \| <SID>OnStringLine() ? '<esc>l:call tabs#DrawBars()<CR>lgR':'\|'
 
 " selections
-nnoremap <expr> <S-v> <SID>OnStringLine() ? ':call <SID>ToFirstLine()<CR><C-v>5j':'<S-v>'
-nmap <expr> yy <SID>OnStringLine() ? 'mm<S-v>y`m':'yy'
+nnoremap <buffer> <expr> <S-v> <SID>OnStringLine() ? ':call <SID>ToFirstLine()<CR><C-v>5j':'<S-v>'
+nnoremap <buffer> <expr> yy <SID>OnStringLine() ? ':call <SID>YankStaff(v:register)<CR>':'yy'
 
 " movement
 inoremap <expr> <Tab> <SID>OnStringLine() ? '<esc>jlgR':'<Tab>'
