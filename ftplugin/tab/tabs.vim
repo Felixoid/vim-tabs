@@ -102,7 +102,7 @@ inoremap <expr> <space> <SID>OnStringLine() ? '-':'<space>'
 " replace deleted things with hyphens
 nnoremap <silent> <expr> d <SID>OnStringLine() ? ':set opfunc=<SID>HyphenDelete<CR>g@':'d'
 vnoremap <expr> d <SID>OnStringLine() ? 'r-':'d'
-nnoremap <silent> <expr> c <SID>OnStringLine() ? ':set opfunc=<SID>:HyphenChange<CR>g@':'c'
+nnoremap <silent> <expr> c <SID>OnStringLine() ? ':set opfunc=<SID>HyphenChange<CR>g@':'c'
 vnoremap <expr> c <SID>OnStringLine() ? 'r-gR':'d'
 nnoremap <expr> C <SID>OnStringLine() ? 'v$r-gR':'C'
 nnoremap <expr> x <SID>OnStringLine() ? 'r-':'x'
