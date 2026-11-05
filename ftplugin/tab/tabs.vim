@@ -97,7 +97,8 @@ inoremap <expr> <S-Tab> <SID>OnStringLine() ? '<esc>klgR':'<S-Tab>'
 " map insert mode to Replace mode if cursor on a string line
 nnoremap <expr> i <SID>OnStringChar() ? 'gR':'i'
 nnoremap <expr> a <SID>OnStringLine() ? 'lgR':'a'
-nnoremap <expr> I <SID>OnStringLine() ? 'T\|gR':'I'
+nnoremap <expr> I <SID>OnStringLine() ? 'T<Bar>gR':'I'
+nnoremap <expr> A <SID>OnStringLine() ? 'f<Bar>lR':'A'
 inoremap <expr> <space> <SID>OnStringLine() ? '-':'<space>'
 
 " replace deleted things with hyphens
