@@ -2,24 +2,24 @@
 " Author: Andrew Kingery
 " Version: 0.2
 
-if exists("b:did_ftplugin")
+if exists('b:did_ftplugin')
     finish
 endif
 let b:did_ftplugin = 1
 
-let s:tuning=['e', 'B', 'G', 'D', 'A', 'E']
+let s:tuning = ['e', 'B', 'G', 'D', 'A', 'E']
 
 function! s:InitTab(length)
     silent execute "normal! i[]\<CR>\<CR>"
     call tabs#DrawStrings(a:length)
     " reset position
-    silent execute "normal! ggl"
+    silent execute 'normal! ggl'
     startinsert
 endfunction
 
 function! tabs#DrawStrings(length)
     for l:string in s:tuning
-        silent execute "normal! i". l:string. "|\<C-o>". a:length. "a-\<esc>a|\<esc>o"
+        silent execute 'normal! i' . l:string . "|\<C-o>" . a:length . "a-\<Esc>a|\<Esc>o"
     endfor
 endfunction
 
@@ -45,11 +45,11 @@ function! s:OnFirstLine()
 endfunction
 
 function! s:HyphenDelete(type)
-    silent execute "normal! `[v`]r-"
+    silent execute 'normal! `[v`]r-'
 endfunction
 
 function! s:HyphenChange(type)
-    silent execute "normal! `[v`]r-"
+    silent execute 'normal! `[v`]r-'
     startgreplace
 endfunction
 
@@ -66,10 +66,10 @@ function! s:Chord(Letter)
     call s:ToFirstLine()
     let l:col = col('.')
     set ve=all
-    silent execute "normal! kR". a:Letter. "\<esc>j". l:col. "|"
+    silent execute 'normal! kR' . a:Letter . "\<Esc>j" . l:col . '|'
     set ve=
     for l:fret in g:Chords[a:Letter]
-        silent execute "normal! \"_s". l:fret. "\<esc>j"
+        silent execute 'normal! "_s' . l:fret . "\<Esc>j"
     endfor
     call setpos('.', l:pos)
 endfunction
@@ -77,7 +77,7 @@ endfunction
 function! s:YankStaff(register)
     let l:pos = getcurpos()
     call s:ToFirstLine()
-    silent execute "normal! \<C-v>5j\"". a:register. "y"
+    silent execute "normal! \<C-v>5j\"" . a:register . 'y'
     call setpos('.', l:pos)
 endfunction
 
@@ -86,40 +86,40 @@ endfunction
 " Set local leader unless the user has his own localleader
 let s:set_leader = !exists('g:maplocalleader')
 if s:set_leader
-    let maplocalleader = "-"
+    let maplocalleader = '-'
 endif
 " chord completion
 for c in keys(g:Chords)
-    silent execute "nnoremap <buffer> <localleader>". c." :call <SID>Chord(\"". c. "\")<CR>"
+    execute 'nnoremap <buffer> <silent> <localleader>' . c . ' :<C-u>call <SID>Chord(' . string(c) . ')<CR>'
 endfor
 
 " Mapping to draw bars with -| in normal mode and | in insert/replace mode
-nnoremap <buffer> <silent> <expr> <localleader>\| <SID>OnStringLine() ? ':call tabs#DrawBars()<CR>':''
-inoremap <buffer> <silent> <expr> \| <SID>OnStringLine() ? '<esc>l:call tabs#DrawBars()<CR>lgR':'\|'
+nnoremap <buffer> <silent> <expr> <localleader><Bar> <SID>OnStringLine() ? ':<C-u>call tabs#DrawBars()<CR>' : ''
+inoremap <buffer> <silent> <expr> <Bar> <SID>OnStringLine() ? '<Esc>l:<C-u>call tabs#DrawBars()<CR>lgR' : '<Bar>'
 
 " selections
-nnoremap <buffer> <expr> <S-v> <SID>OnStringLine() ? ':call <SID>ToFirstLine()<CR><C-v>5j':'<S-v>'
-nnoremap <buffer> <expr> yy <SID>OnStringLine() ? ':call <SID>YankStaff(v:register)<CR>':'yy'
+nnoremap <buffer> <silent> <expr> <S-v> <SID>OnStringLine() ? ':<C-u>call <SID>ToFirstLine()<CR><C-v>5j' : '<S-v>'
+nnoremap <buffer> <silent> <expr> yy <SID>OnStringLine() ? ':<C-u>call <SID>YankStaff(' . string(v:register) . ')<CR>' : 'yy'
 
 " movement
-inoremap <buffer> <expr> <Tab> <SID>OnStringLine() ? '<esc>jlgR':'<Tab>'
-inoremap <buffer> <expr> <S-Tab> <SID>OnStringLine() ? '<esc>klgR':'<S-Tab>'
+inoremap <buffer> <expr> <Tab> <SID>OnStringLine() ? '<Esc>jlgR' : '<Tab>'
+inoremap <buffer> <expr> <S-Tab> <SID>OnStringLine() ? '<Esc>klgR' : '<S-Tab>'
 
 " map insert mode to Replace mode if cursor on a string line
-nnoremap <buffer> <expr> i <SID>OnStringChar() ? 'gR':'i'
-nnoremap <buffer> <expr> a <SID>OnStringLine() ? 'lgR':'a'
-nnoremap <buffer> <expr> I <SID>OnStringLine() ? 'T<Bar>gR':'I'
-nnoremap <buffer> <expr> A <SID>OnStringLine() ? 'f<Bar>lR':'A'
-inoremap <buffer> <expr> <space> <SID>OnStringLine() ? '-':'<space>'
+nnoremap <buffer> <expr> i <SID>OnStringChar() ? 'gR' : 'i'
+nnoremap <buffer> <expr> a <SID>OnStringLine() ? 'lgR' : 'a'
+nnoremap <buffer> <expr> I <SID>OnStringLine() ? 'T<Bar>gR' : 'I'
+nnoremap <buffer> <expr> A <SID>OnStringLine() ? 'f<Bar>lR' : 'A'
+inoremap <buffer> <expr> <Space> <SID>OnStringLine() ? '-' : '<Space>'
 
 " replace deleted things with hyphens
 nnoremap <buffer> <silent> <expr> d <SID>OnStringLine() ? ':set opfunc=<SID>HyphenDelete<CR>g@':'d'
-vnoremap <buffer> <expr> d <SID>OnStringLine() ? 'r-':'d'
 nnoremap <buffer> <silent> <expr> c <SID>OnStringLine() ? ':set opfunc=<SID>HyphenChange<CR>g@':'c'
-vnoremap <buffer> <expr> c <SID>OnStringLine() ? 'r-gR':'c'
-nnoremap <buffer> <expr> C <SID>OnStringLine() ? 'v$r-gR':'C'
-nnoremap <buffer> <expr> x <SID>OnStringLine() ? 'r-':'x'
-nnoremap <buffer> <expr> s <SID>OnStringLine() ? 'r-gR':'s'
+vnoremap <buffer> <expr> d <SID>OnStringLine() ? 'r-' : 'd'
+vnoremap <buffer> <expr> c <SID>OnStringLine() ? 'r-gR' : 'c'
+nnoremap <buffer> <expr> C <SID>OnStringLine() ? 'v$r-gR' : 'C'
+nnoremap <buffer> <expr> x <SID>OnStringLine() ? 'r-' : 'x'
+nnoremap <buffer> <expr> s <SID>OnStringLine() ? 'r-gR' : 's'
 
 " plugin undo for `set ft=`
 let s:lead = substitute(maplocalleader, ' ', '<Space>', 'g')
