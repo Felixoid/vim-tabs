@@ -24,13 +24,11 @@ function! tabs#DrawStrings(length)
 endfunction
 
 function! tabs#DrawBars()
-    let l:jump_back = s:OnFirstLine()
+    let l:pos = getcurpos()
     call s:ToFirstLine()
     silent execute "normal! \<C-v>5jr|"
     call s:ClearNames(col('.'), col('.'))
-    if !l:jump_back
-        silent execute "normal! \<C-o>"
-    endif
+    call setpos('.', l:pos)
 endfunction
 
 function! s:OnStringLine()
@@ -55,11 +53,12 @@ function! s:HyphenChange(type)
 endfunction
 
 function! s:ToFirstLine()
-    noh
+    let l:col = col('.')
     if s:OnFirstLine()
         return
     endif
-    silent execute 'normal! ?\C^' . s:tuning[0] . '|?s+' . (col('.') - 1) . "\<CR>"
+    call search('\C^' . s:tuning[0] . '|', 'bW')
+    call cursor(line('.'), l:col)
 endfunction
 
 function! s:Chord(Letter)
@@ -134,19 +133,19 @@ endfor
 
 " Mapping to draw bars with -| in normal mode and | in insert/replace mode
 nnoremap <buffer> <silent> <expr> <localleader><Bar> <SID>OnStringLine() ? ':<C-u>call tabs#DrawBars()<CR>' : ''
-inoremap <buffer> <silent> <expr> <Bar> <SID>OnStringLine() ? '<Esc>l:<C-u>call tabs#DrawBars()<CR>lgR' : '<Bar>'
+inoremap <buffer> <silent> <expr> <Bar> <SID>OnStringLine() ? '<C-\><C-o>:<C-u>call tabs#DrawBars()<CR><Right>' : '<Bar>'
 
 " selections
 nnoremap <buffer> <silent> <expr> <S-v> <SID>OnStringLine() ? ':<C-u>call <SID>ToFirstLine()<CR><C-v>5j' : '<S-v>'
 nnoremap <buffer> <silent> <expr> yy <SID>OnStringLine() ? ':<C-u>call <SID>YankStaff(' . string(v:register) . ')<CR>' : 'yy'
 
 " movement
-inoremap <buffer> <expr> <Tab> <SID>OnStringLine() ? '<Esc>jlgR' : '<Tab>'
-inoremap <buffer> <expr> <S-Tab> <SID>OnStringLine() ? '<Esc>klgR' : '<S-Tab>'
+inoremap <buffer> <expr> <Tab> <SID>OnStringLine() ? '<C-\><C-o>j' : '<Tab>'
+inoremap <buffer> <expr> <S-Tab> <SID>OnStringLine() ? '<C-\><C-o>k' : '<S-Tab>'
 
 " map insert mode to Replace mode if cursor on a string line
 nnoremap <buffer> <expr> i <SID>OnStringChar() ? 'gR' : 'i'
-nnoremap <buffer> <expr> a <SID>OnStringLine() ? 'lgR' : 'a'
+nnoremap <buffer> <expr> a <SID>OnStringLine() ? 'a<C-\><C-o>gR' : 'a'
 nnoremap <buffer> <expr> I <SID>OnStringLine() ? 'T<Bar>gR' : 'I'
 nnoremap <buffer> <expr> A <SID>OnStringLine() ? 'f<Bar>lR' : 'A'
 inoremap <buffer> <expr> <Space> <SID>OnStringLine() ? '-' : '<Space>'
