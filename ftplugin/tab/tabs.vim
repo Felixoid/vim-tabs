@@ -64,8 +64,9 @@ endfunction
 function! s:Chord(Letter)
     normal mm
     call s:ToFirstLine()
+    let l:col = col('.')
     set ve=all
-    silent execute "normal! kR". a:Letter. "\<esc>j"
+    silent execute "normal! kR". a:Letter. "\<esc>j". l:col. "|"
     set ve=
     for @r in g:Chords[a:Letter]
         silent execute "normal! s\<C-R>r\<esc>j"
