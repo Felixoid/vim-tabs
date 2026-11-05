@@ -31,6 +31,26 @@ function! tabs#DrawBars()
     call setpos('.', l:pos)
 endfunction
 
+" Extends the strings of the current staff that are shorter than width with '-'.
+" search() keeps the cursor, so it's safe in Insert mode.
+function! s:PadStaff(width)
+    let l:top = search('\C^' . s:tuning[0] . '|', 'bcnW')
+    if l:top == 0
+        return
+    endif
+    for l:lnum in range(l:top, l:top + len(s:tuning) - 1)
+        let l:line = getline(l:lnum)
+        if strlen(l:line) < a:width
+            call setline(l:lnum, l:line . repeat('-', a:width - strlen(l:line)))
+        endif
+    endfor
+endfunction
+
+" Motion to the next bar, or to the end of an unclosed staff.
+function! s:BarOrEOL()
+    return stridx(getline('.'), '|', col('.')) >= 0 ? 'f|' : '$'
+endfunction
+
 function! s:OnStringLine()
     return getline('.') =~# '^[a-gA-G]|'
 endfunction
@@ -52,8 +72,11 @@ function! s:HyphenChange(type)
     startgreplace
 endfunction
 
+" Pads the staff first, so the e string reaches the column and block commands
+" from there cover all strings.
 function! s:ToFirstLine()
     let l:col = col('.')
+    call s:PadStaff(l:col)
     if s:OnFirstLine()
         return
     endif
@@ -147,7 +170,7 @@ inoremap <buffer> <expr> <S-Tab> <SID>OnStringLine() ? '<C-\><C-o>k' : '<S-Tab>'
 nnoremap <buffer> <expr> i <SID>OnStringChar() ? 'gR' : 'i'
 nnoremap <buffer> <expr> a <SID>OnStringLine() ? 'a<C-\><C-o>gR' : 'a'
 nnoremap <buffer> <expr> I <SID>OnStringLine() ? 'T<Bar>gR' : 'I'
-nnoremap <buffer> <expr> A <SID>OnStringLine() ? 'f<Bar>lR' : 'A'
+nnoremap <buffer> <expr> A <SID>OnStringLine() ? <SID>BarOrEOL() . 'a<C-\><C-o>gR' : 'A'
 inoremap <buffer> <expr> <Space> <SID>OnStringLine() ? '-' : '<Space>'
 
 " replace deleted things with hyphens
@@ -161,12 +184,18 @@ nnoremap <buffer> <expr> x <SID>OnStringLine() ? 'r-' : 'x'
 nnoremap <buffer> <expr> s <SID>OnStringLine() ? 'r-gR' : 's'
 nnoremap <buffer> <silent> <expr> X <SID>OnStringLine() ? ':<C-u>call <SID>ClearColumns(' . v:count1 . ')<CR>' : 'X'
 
+" Typing past the end of one string extends the whole staff.
+augroup tabs_pad
+    autocmd! * <buffer>
+    autocmd TextChangedI,InsertLeave <buffer> if s:OnStringLine() | call s:PadStaff(strlen(getline('.'))) | endif
+augroup END
+
 " plugin undo for `set ft=`
 let s:lead = substitute(maplocalleader, ' ', '<Space>', 'g')
 let s:undo = map(keys(g:Chords) + ['<Bar>'], '"nunmap <buffer> " . s:lead . v:val')
 let s:undo += map(['<S-v>', 'yy', 'i', 'a', 'I', 'A', 'd', 'c', 'C', 'x', 'X', 's'], '"nunmap <buffer> " . v:val')
 let s:undo += map(['<Bar>', '<Tab>', '<S-Tab>', '<Space>'], '"iunmap <buffer> " . v:val')
-let s:undo += ['vunmap <buffer> d', 'vunmap <buffer> c']
+let s:undo += ['vunmap <buffer> d', 'vunmap <buffer> c', 'autocmd! tabs_pad * <buffer>']
 " No spaces before '|': unmap treats trailing whitespace as part of the lhs.
 let b:undo_ftplugin = 'silent! ' . join(s:undo, '|silent! ')
 
