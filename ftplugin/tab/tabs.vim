@@ -92,7 +92,7 @@ nmap <expr> yy <SID>OnStringLine() ? 'mm<S-v>y`m':'yy'
 
 " movement
 inoremap <expr> <Tab> <SID>OnStringLine() ? '<esc>jlgR':'<Tab>'
-inoremap <expr> <S-Tab> <SID>OnStringLine() ? '<esc>klgR':'<Tab>'
+inoremap <expr> <S-Tab> <SID>OnStringLine() ? '<esc>klgR':'<S-Tab>'
 
 " map insert mode to Replace mode if cursor on a string line
 nnoremap <expr> i <SID>OnStringChar() ? 'gR':'i'
