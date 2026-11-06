@@ -417,23 +417,28 @@ function! Test_d_motion_across_strings()
     call ExpectCursor(4, 14)
 endfunction
 
-" Known bugs.
-
-function! XFail_x_must_keep_string_name()
+function! Test_x_keeps_string_name()
     call Given(g:even, 6, 1)
     call Keys('x')
     call ExpectBuffer(g:even)
     call ExpectCursor(6, 1)
 endfunction
 
-function! XFail_x_must_keep_opening_bar()
+function! Test_x_keeps_opening_bar()
     call Given(g:even, 6, 2)
     call Keys('x')
     call ExpectBuffer(g:even)
     call ExpectCursor(6, 2)
 endfunction
 
-function! XFail_s_must_keep_opening_bar()
+function! Test_s_keeps_string_name()
+    call Given(g:even, 6, 1)
+    call Keys("s5\<Esc>")
+    call ExpectBuffer(g:even)
+    call ExpectCursor(6, 1)
+endfunction
+
+function! Test_s_keeps_opening_bar()
     call Given(g:even, 6, 2)
     call Keys("s5\<Esc>")
     call ExpectBuffer(g:even)

@@ -55,6 +55,11 @@ function! s:OnStringLine()
     return s:IsString(getline('.'))
 endfunction
 
+" Columns 1 and 2 hold the string name and the opening bar.
+function! s:OnNameOrBar()
+    return col('.') < 3
+endfunction
+
 function! s:IsString(line)
     return a:line =~# '^[a-gA-G]|'
 endfunction
@@ -150,8 +155,7 @@ function! s:YankStaff(register)
 endfunction
 
 function! s:ClearColumns(count)
-    " Columns 1 and 2 hold the string name and the opening bar.
-    if col('.') < 3
+    if s:OnNameOrBar()
         return
     endif
     let l:pos = getcurpos()
@@ -227,8 +231,8 @@ nnoremap <buffer> <silent> <expr> c <SID>OnStringLine() ? ':<C-u>set opfunc=<SID
 nnoremap <buffer> <silent> <expr> cc <SID>OnStringLine() ? ':<C-u>set opfunc=<SID>HyphenChange<CR>' . v:count1 . 'g@_' : 'cc'
 vnoremap <buffer> <silent> <expr> c <SID>OnStringLine() ? 'r-:<C-u>call <SID>ClearVisualNames()<CR>gR' : 'c'
 nnoremap <buffer> <expr> C <SID>OnStringLine() ? 'v$r-gR' : 'C'
-nnoremap <buffer> <expr> x <SID>OnStringLine() ? 'r-' : 'x'
-nnoremap <buffer> <expr> s <SID>OnStringLine() ? 'r-gR' : 's'
+nnoremap <buffer> <expr> x !<SID>OnStringLine() ? 'x' : <SID>OnNameOrBar() ? '' : 'r-'
+nnoremap <buffer> <expr> s !<SID>OnStringLine() ? 's' : <SID>OnNameOrBar() ? '' : 'r-gR'
 nnoremap <buffer> <silent> <expr> X <SID>OnStringLine() ? ':<C-u>call <SID>ClearColumns(' . v:count1 . ')<CR>' : 'X'
 
 " Typing past the end of one string extends the whole staff.
