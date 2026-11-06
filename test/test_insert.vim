@@ -52,6 +52,48 @@ function! Test_shift_tab_moves_to_previous_string()
     call ExpectCursor(5, 6)
 endfunction
 
+function! Test_cr_moves_to_next_string()
+    call Given(g:even, 6, 5)
+    call Keys("i7\<CR>5\<Esc>")
+    let l:want =<< trim END
+        []
+           Am  C7  G
+        e|-0-1-2-3|4-5-6-7-|
+        B|-0-1-2-3|4-5-6-7-|
+        G|-0-1-2-3|4-5-6-7-|
+        D|-071-2-3|4-5-6-7-|
+        A|-0-5-2-3|4-5-6-7-|
+        E|-0-1-2-3|4-5-6-7-|
+        lyrics
+    END
+    call ExpectBuffer(l:want)
+    call ExpectCursor(7, 6)
+endfunction
+
+function! Test_cr_off_string_line_breaks_line()
+    call Given(g:even, 9, 4)
+    call Keys("i\<CR>\<Esc>")
+    call ExpectBuffer(g:even[:7] + ['lyr', 'ics'])
+endfunction
+
+function! Test_cr_and_tab_stay_on_last_string()
+    call Given(g:even, 8, 5)
+    call Keys("i7\<CR>5\<Tab>3\<Esc>")
+    let l:want = copy(g:even)
+    let l:want[7] = 'E|-07532-3|4-5-6-7-|'
+    call ExpectBuffer(l:want)
+    call ExpectCursor(8, 7)
+endfunction
+
+function! Test_shift_tab_stays_on_first_string()
+    call Given(g:even, 3, 5)
+    call Keys("i7\<S-Tab>5\<Esc>")
+    let l:want = copy(g:even)
+    let l:want[2] = 'e|-075-2-3|4-5-6-7-|'
+    call ExpectBuffer(l:want)
+    call ExpectCursor(3, 6)
+endfunction
+
 function! Test_a_replaces_after_cursor()
     call Given(g:even, 6, 5)
     call Keys("a7\<Esc>")

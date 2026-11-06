@@ -92,6 +92,15 @@ function! s:IsString(line)
     return a:line =~# '^[a-gA-G]|'
 endfunction
 
+" Insert mode keys for moving one string down (step 1) or up (-1). They do
+" nothing at the staff edges, where typing would overwrite lyrics or chord names.
+function! s:StringStep(key, step)
+    if !s:OnStringLine()
+        return a:key
+    endif
+    return s:IsString(getline(line('.') + a:step)) ? "\<C-\>\<C-o>" . (a:step > 0 ? 'j' : 'k') : ''
+endfunction
+
 function! s:OnFirstLine()
     return getline('.')[0:1] ==# s:tuning[0] . '|'
 endfunction
@@ -239,8 +248,9 @@ nnoremap <buffer> <silent> <expr> <S-v> <SID>OnStringLine() ? ':<C-u>call <SID>T
 nnoremap <buffer> <silent> <expr> yy <SID>OnStringLine() ? ':<C-u>call <SID>YankStaff(' . string(v:register) . ')<CR>' : 'yy'
 
 " movement
-inoremap <buffer> <expr> <Tab> <SID>OnStringLine() ? '<C-\><C-o>j' : '<Tab>'
-inoremap <buffer> <expr> <S-Tab> <SID>OnStringLine() ? '<C-\><C-o>k' : '<S-Tab>'
+inoremap <buffer> <silent> <expr> <CR> <SID>StringStep('<CR>', 1)
+inoremap <buffer> <silent> <expr> <Tab> <SID>StringStep('<Tab>', 1)
+inoremap <buffer> <silent> <expr> <S-Tab> <SID>StringStep('<S-Tab>', -1)
 
 " map insert mode to Replace mode if cursor on a string line
 nnoremap <buffer> <silent> <expr> i !<SID>OnStringLine() ? 'i' : <SID>OnNameOrBar() ? ':<C-u>call cursor(0, 3)<CR>gR' : 'gR'
