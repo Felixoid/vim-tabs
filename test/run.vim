@@ -158,7 +158,7 @@ for s:test in sort(s:tests)
             endfor
         endfor
     elseif s:status ==# 'XPASS'
-        call add(s:out, '    fixed? rename it to Test_' . s:test[6:])
+        call add(s:out, '    fixed? rename it to Test_' . substitute(s:test[6:], 'must_', '', '') . ' (and fix the verb)')
     endif
     let s:failed += index(['FAIL', 'XPASS'], s:status) >= 0
     let s:skipped += s:status ==# 'skip'

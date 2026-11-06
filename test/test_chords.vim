@@ -56,14 +56,14 @@ function! Test_user_chords_extend_defaults()
     call ExpectBuffer(l:want)
 endfunction
 
-" Known bugs.
-
-function! XFail_chord_must_ignore_non_string_lines()
+function! Test_chord_ignores_non_string_lines()
     call Given(g:even, 9, 3)
     call Keys('-Am')
     call ExpectBuffer(g:even)
     call ExpectCursor(9, 3)
 endfunction
+
+" Known bugs.
 
 function! XFail_chord_must_keep_virtualedit()
     set virtualedit=block

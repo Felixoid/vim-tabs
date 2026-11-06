@@ -85,6 +85,9 @@ function! s:ToFirstLine()
 endfunction
 
 function! s:Chord(Letter)
+    if !s:OnStringLine()
+        return
+    endif
     let l:pos = getcurpos()
     call s:ToFirstLine()
     let l:col = col('.')
