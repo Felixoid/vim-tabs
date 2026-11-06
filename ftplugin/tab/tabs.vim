@@ -1,6 +1,6 @@
 " VimTabs.vim - A vim plugin for writing guitar tablature
 " Author: Andrew Kingery
-" Version: 0.2
+" Version: 0.3
 
 if exists('b:did_ftplugin')
     finish
