@@ -217,9 +217,16 @@ tab styles.
 Development ~
 
 'make test' runs the tests in plain Vim, with no other dependencies. 'make test
-T=pattern' runs only the tests whose names match the pattern.
+T=pattern' runs only the tests whose names match the pattern. The tests need
+Vim 8.1.1585 or newer; 'make smoke' runs a smaller smoke test that works on
+older Vims too.
 
-'make doc' regenerates 'doc/tabs.txt' from 'README.md'. It runs html2vimdoc [4]
+'make test-vims' runs the tests in several Vim versions in Docker, using the
+thinca/vim [4] images, and a smaller smoke test in Vims too old for the tests.
+'VIMS' and 'SMOKE_VIMS' override the versions, for example 'make test-vims
+VIMS=v9.1.0000 SMOKE_VIMS='.
+
+'make doc' regenerates 'doc/tabs.txt' from 'README.md'. It runs html2vimdoc [5]
 in Docker and builds its image on the first run.
 
 ===============================================================================
@@ -229,6 +236,7 @@ References ~
 [1] https://github.com/junegunn/vim-plug
 [2] https://en.wikipedia.org/wiki/ASCII_tab
 [3] https://www.classtab.org/tabbing.htm
-[4] https://github.com/ycm-core/vim-tools
+[4] https://hub.docker.com/r/thinca/vim
+[5] https://github.com/ycm-core/vim-tools
 
 vim: ft=help

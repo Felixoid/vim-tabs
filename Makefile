@@ -18,6 +18,26 @@ test:
 	@$(VIM) -Nu NONE -i NONE -es $(if $(T),--cmd "let g:test_filter = '$(T)'") -S test/run.vim </dev/null; \
 	rc=$$?; cat test/out.log; exit $$rc
 
+.PHONY: smoke
+smoke:
+	@$(VIM) -Nu NONE -i NONE -es -S test/smoke.vim </dev/null; \
+	rc=$$?; cat test/out.log; exit $$rc
+
+# Tags of the thinca/vim images: VIMS run the tests, SMOKE_VIMS are too old for them.
+VIMS ?= v8.1.1585 v8.2.3227 v8.2.4825 latest
+SMOKE_VIMS ?= v7.4.2367 v8.0.0000
+
+.PHONY: test-vims
+test-vims:
+	@failed=; \
+	for v in $(addprefix run:,$(VIMS)) $(addprefix smoke:,$(SMOKE_VIMS)); do \
+	  echo "== $${v#*:} ($${v%%:*})"; \
+	  docker run --rm -u $$(id -u):$$(id -g) -v $(CURDIR):/src -w /src --entrypoint vim thinca/vim:$${v#*:} \
+	    -Nu NONE -i NONE -es -S test/$${v%%:*}.vim </dev/null || failed="$$failed $${v#*:}"; \
+	  grep -v '^ok' test/out.log; \
+	done; \
+	[ -z "$$failed" ] || { echo "failed on:$$failed"; exit 1; }
+
 # The image is rebuilt only when the Dockerfile hash in its label differs.
 .PHONY: doc
 doc:

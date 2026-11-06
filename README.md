@@ -120,6 +120,8 @@ Tablature in plain text isn't completely standardized, but some norms are presen
 Development
 -----------
 
-`make test` runs the tests in plain Vim, with no other dependencies. `make test T=pattern` runs only the tests whose names match the pattern.
+`make test` runs the tests in plain Vim, with no other dependencies. `make test T=pattern` runs only the tests whose names match the pattern. The tests need Vim 8.1.1585 or newer; `make smoke` runs a smaller smoke test that works on older Vims too.
+
+`make test-vims` runs the tests in several Vim versions in Docker, using the [thinca/vim](https://hub.docker.com/r/thinca/vim) images, and a smaller smoke test in Vims too old for the tests. `VIMS` and `SMOKE_VIMS` override the versions, for example `make test-vims VIMS=v9.1.0000 SMOKE_VIMS=`.
 
 `make doc` regenerates `doc/tabs.txt` from `README.md`. It runs [html2vimdoc](https://github.com/ycm-core/vim-tools) in Docker and builds its image on the first run.
