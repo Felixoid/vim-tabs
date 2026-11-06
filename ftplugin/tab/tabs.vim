@@ -150,8 +150,8 @@ if s:set_leader
     let maplocalleader = '-'
 endif
 " chord completion
-for c in keys(g:Chords)
-    execute 'nnoremap <buffer> <silent> <localleader>' . c . ' :<C-u>call <SID>Chord(' . string(c) . ')<CR>'
+for s:c in keys(g:Chords)
+    execute 'nnoremap <buffer> <silent> <localleader>' . s:c . ' :<C-u>call <SID>Chord(' . string(s:c) . ')<CR>'
 endfor
 
 " Mapping to draw bars with -| in normal mode and | in insert/replace mode
@@ -190,14 +190,18 @@ augroup tabs_pad
     autocmd TextChangedI,InsertLeave <buffer> if s:OnStringLine() | call s:PadStaff(strlen(getline('.'))) | endif
 augroup END
 
-" plugin undo for `set ft=`
-let s:lead = substitute(maplocalleader, ' ', '<Space>', 'g')
-let s:undo = map(keys(g:Chords) + ['<Bar>'], '"nunmap <buffer> " . s:lead . v:val')
-let s:undo += map(['<S-v>', 'yy', 'i', 'a', 'I', 'A', 'd', 'c', 'C', 'x', 'X', 's'], '"nunmap <buffer> " . v:val')
-let s:undo += map(['<Bar>', '<Tab>', '<S-Tab>', '<Space>'], '"iunmap <buffer> " . v:val')
-let s:undo += ['vunmap <buffer> d', 'vunmap <buffer> c', 'autocmd! tabs_pad * <buffer>']
-" No spaces before '|': unmap treats trailing whitespace as part of the lhs.
-let b:undo_ftplugin = 'silent! ' . join(s:undo, '|silent! ')
+" Undo for `set ft=`. :autocmd would swallow a following '|', hence :execute.
+let b:undo_ftplugin = 'silent! execute "autocmd! tabs_pad * <buffer>"'
+" Without maplist() (Vim before 8.2.4825) the mappings outlive `set ft=`.
+if exists('*maplist')
+    let s:sid = matchstr(expand('<SID>'), '\d\+')
+    for s:map in maplist()
+        if s:map.buffer && s:map.sid == s:sid
+            " No spaces before '|': unmap treats trailing whitespace as part of the lhs.
+            let b:undo_ftplugin .= '|silent! ' . s:map.mode . 'unmap <buffer> ' . substitute(s:map.lhs, '|', '<Bar>', 'g')
+        endif
+    endfor
+endif
 
 if s:set_leader
     unlet maplocalleader
