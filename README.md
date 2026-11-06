@@ -90,9 +90,14 @@ A|-0---
 E|-----
 ```
 
-Built in chords: `A B C D E F G Am Bm Cm Dm Em Fm Gm`.
+Built in chords:
 
-When one chord name starts another, like `A` and `Am`, Vim waits for 'timeoutlen' after `-A` to see whether you type `m`.
+- major: `A B C D E F G`
+- minor: `Am Bm Cm Dm Em Fm Gm`
+- seventh: `A7 B7 C7 D7 E7 F7 G7`
+- minor seventh: `Am7 Bm7 Cm7 Dm7 Em7 Fm7 Gm7`
+
+When one chord name starts another, like `A`, `Am` and `Am7`, Vim waits for 'timeoutlen' after `-A` or `-Am` to see whether you type more.
 
 ### The `g:Chords` option
 
@@ -100,12 +105,34 @@ Add your own chords by setting `g:Chords` in your vimrc. Each entry lists the fr
 
 ```vim
 let g:Chords = {
-\    'A7': ['0', '2', '0', '2', '0'],
-\    'C':  ['3', '1', '0', '2', '3'],
+\    'Asus4': ['0', '3', '2', '2', '0'],
+\    'C':     ['3', '1', '0', '2', '3'],
 \}
 ```
 
 Your chords are added to the built in ones and win when the names match, like `C` above. The plugin reads `g:Chords` each time it opens a `.tab` file, so your vimrc is the right place for it.
+
+Highlighting
+------------
+
+Only string lines and the chord names right above a staff get tab highlighting, so lyrics and comments stay plain. Each part has its own syntax group, linked to a standard one:
+
+- `tabName`, the string name before the first bar: `Identifier`.
+- `tabBar`, the bars: `Delimiter`.
+- `tabHyphen`, the hyphens: `Comment`.
+- `tabFret`, the fret numbers: `Number`.
+- `tabTechnique`, slides `/` and `\`, hammer ons `h`, pull offs `p`, bends `b`, releases `r`, taps `t` and vibrato `~`: `Operator`.
+- `tabMute`, dead notes `x`: `Special`.
+- `tabHarmonic`, harmonics like `<12>`: `Special`.
+- `tabChord`, chord names like `Am`, `C7`, `Emaj7`, `F#m7b5` or `C/G` on a line right above a staff: `SpecialComment`.
+- `tabHeader`, the `[title]` line: `Title`.
+
+To change a color, link the group to another one or give it your own colors in your vimrc, after the `:colorscheme` line:
+
+```vim
+highlight link tabHyphen NonText
+highlight tabFret ctermfg=yellow guifg=#e5c07b
+```
 
 Turning the Plugin Off
 ----------------------
