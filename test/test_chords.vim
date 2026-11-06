@@ -63,11 +63,22 @@ function! Test_chord_ignores_non_string_lines()
     call ExpectCursor(9, 3)
 endfunction
 
-" Known bugs.
-
-function! XFail_chord_must_keep_virtualedit()
-    set virtualedit=block
+function! Test_chord_keeps_virtualedit()
     call Given(g:blank, 4, 5)
+    set virtualedit=block
     call Keys('-Am')
     call assert_equal('block', &virtualedit)
+endfunction
+
+function! Test_chord_keeps_window_local_virtualedit()
+    if !has('patch-8.2.3227')
+        call Skip("'virtualedit' is global only")
+    endif
+    call Given(g:blank, 4, 5)
+    set virtualedit=block
+    setlocal virtualedit=onemore
+    call Keys('-Am')
+    call assert_equal('onemore', &l:virtualedit)
+    call assert_equal('block', &g:virtualedit)
+    setlocal virtualedit=
 endfunction

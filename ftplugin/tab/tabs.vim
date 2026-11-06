@@ -91,9 +91,14 @@ function! s:Chord(Letter)
     let l:pos = getcurpos()
     call s:ToFirstLine()
     let l:col = col('.')
-    set ve=all
-    silent execute 'normal! kR' . a:Letter . "\<Esc>j" . l:col . '|'
-    set ve=
+    " Restore the user's value even if a :normal! below fails.
+    let l:ve = &l:virtualedit
+    setlocal virtualedit=all
+    try
+        silent execute 'normal! kR' . a:Letter . "\<Esc>j" . l:col . '|'
+    finally
+        let &l:virtualedit = l:ve
+    endtry
     for l:fret in g:Chords[a:Letter]
         silent execute 'normal! "_s' . l:fret . "\<Esc>j"
     endfor
