@@ -16,6 +16,7 @@ endif
 
 execute 'set rtp^=' . fnameescape(s:root)
 filetype plugin on
+syntax on
 
 " Options that tests or the plugin may change; restored after each test.
 let s:options = ['virtualedit', 'ignorecase', 'smartcase']
