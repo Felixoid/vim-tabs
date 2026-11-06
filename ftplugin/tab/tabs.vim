@@ -64,10 +64,6 @@ function! s:IsString(line)
     return a:line =~# '^[a-gA-G]|'
 endfunction
 
-function! s:OnStringChar()
-    return s:OnStringLine() && getline('.')[col('.') - 1] ==# '-'
-endfunction
-
 function! s:OnFirstLine()
     return getline('.')[0:1] ==# s:tuning[0] . '|'
 endfunction
@@ -216,9 +212,9 @@ inoremap <buffer> <expr> <Tab> <SID>OnStringLine() ? '<C-\><C-o>j' : '<Tab>'
 inoremap <buffer> <expr> <S-Tab> <SID>OnStringLine() ? '<C-\><C-o>k' : '<S-Tab>'
 
 " map insert mode to Replace mode if cursor on a string line
-nnoremap <buffer> <expr> i <SID>OnStringChar() ? 'gR' : 'i'
+nnoremap <buffer> <silent> <expr> i !<SID>OnStringLine() ? 'i' : <SID>OnNameOrBar() ? ':<C-u>call cursor(0, 3)<CR>gR' : 'gR'
 nnoremap <buffer> <expr> a <SID>OnStringLine() ? 'a<C-\><C-o>gR' : 'a'
-nnoremap <buffer> <expr> I <SID>OnStringLine() ? 'T<Bar>gR' : 'I'
+nnoremap <buffer> <silent> <expr> I !<SID>OnStringLine() ? 'I' : <SID>OnNameOrBar() ? ':<C-u>call cursor(0, 3)<CR>gR' : 'T<Bar>gR'
 nnoremap <buffer> <expr> A <SID>OnStringLine() ? <SID>BarOrEOL() . 'a<C-\><C-o>gR' : 'A'
 inoremap <buffer> <expr> <Space> <SID>OnStringLine() ? '-' : '<Space>'
 

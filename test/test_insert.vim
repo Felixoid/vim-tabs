@@ -177,9 +177,7 @@ function! Test_off_string_line_insert_is_plain()
     call ExpectBuffer(l:want)
 endfunction
 
-" Known bugs.
-
-function! XFail_i_must_replace_digit()
+function! Test_i_replaces_digit()
     call Given(g:even, 6, 4)
     call Keys("i7\<Esc>")
     let l:want =<< trim END
@@ -198,7 +196,7 @@ function! XFail_i_must_replace_digit()
 endfunction
 
 " In columns 1 and 2, i starts at column 3, like I starts after the bar.
-function! XFail_i_must_keep_string_name()
+function! Test_i_keeps_string_name()
     call Given(g:even, 6, 1)
     call Keys("i7\<Esc>")
     let l:want =<< trim END
@@ -208,6 +206,60 @@ function! XFail_i_must_keep_string_name()
         B|-0-1-2-3|4-5-6-7-|
         G|-0-1-2-3|4-5-6-7-|
         D|70-1-2-3|4-5-6-7-|
+        A|-0-1-2-3|4-5-6-7-|
+        E|-0-1-2-3|4-5-6-7-|
+        lyrics
+    END
+    call ExpectBuffer(l:want)
+    call ExpectCursor(6, 3)
+endfunction
+
+function! Test_i_with_count_keeps_string_name()
+    call Given(g:even, 6, 1)
+    call Keys("2i7\<Esc>")
+    let l:want =<< trim END
+        []
+           Am  C7  G
+        e|-0-1-2-3|4-5-6-7-|
+        B|-0-1-2-3|4-5-6-7-|
+        G|-0-1-2-3|4-5-6-7-|
+        D|70-1-2-3|4-5-6-7-|
+        A|-0-1-2-3|4-5-6-7-|
+        E|-0-1-2-3|4-5-6-7-|
+        lyrics
+    END
+    call ExpectBuffer(l:want)
+    call ExpectCursor(6, 3)
+endfunction
+
+function! Test_I_on_string_name_starts_at_column_3()
+    call Given(g:even, 6, 1)
+    call Keys("I9\<Esc>")
+    let l:want =<< trim END
+        []
+           Am  C7  G
+        e|-0-1-2-3|4-5-6-7-|
+        B|-0-1-2-3|4-5-6-7-|
+        G|-0-1-2-3|4-5-6-7-|
+        D|90-1-2-3|4-5-6-7-|
+        A|-0-1-2-3|4-5-6-7-|
+        E|-0-1-2-3|4-5-6-7-|
+        lyrics
+    END
+    call ExpectBuffer(l:want)
+    call ExpectCursor(6, 3)
+endfunction
+
+function! Test_I_on_opening_bar_starts_at_column_3()
+    call Given(g:even, 6, 2)
+    call Keys("I9\<Esc>")
+    let l:want =<< trim END
+        []
+           Am  C7  G
+        e|-0-1-2-3|4-5-6-7-|
+        B|-0-1-2-3|4-5-6-7-|
+        G|-0-1-2-3|4-5-6-7-|
+        D|90-1-2-3|4-5-6-7-|
         A|-0-1-2-3|4-5-6-7-|
         E|-0-1-2-3|4-5-6-7-|
         lyrics
