@@ -52,7 +52,11 @@ function! s:BarOrEOL()
 endfunction
 
 function! s:OnStringLine()
-    return getline('.') =~# '^[a-gA-G]|'
+    return s:IsString(getline('.'))
+endfunction
+
+function! s:IsString(line)
+    return a:line =~# '^[a-gA-G]|'
 endfunction
 
 function! s:OnStringChar()
@@ -63,12 +67,45 @@ function! s:OnFirstLine()
     return getline('.')[0:1] ==# s:tuning[0] . '|'
 endfunction
 
+" Opfunc for d: clears the notes the motion covers. Only string lines change,
+" never their first two columns, and bars stay: a motion edits notes, not
+" measures. Leaves the cursor at the first cleared character.
 function! s:HyphenDelete(type)
-    silent execute 'normal! `[v`]r-'
+    let l:first = line("'[")
+    let l:last = line("']")
+    let l:start = []
+    for l:lnum in range(l:first, l:last)
+        if !s:IsString(getline(l:lnum))
+            continue
+        endif
+        " Linewise: the whole string. Characterwise: the motion may start and
+        " end in the middle of the first and last line.
+        let l:from = l:lnum == l:first && a:type ==# 'char' ? col("'[") : 3
+        let l:to = l:lnum == l:last && a:type ==# 'char' ? col("']") : strlen(getline(l:lnum))
+        let l:from = max([l:from, 3])
+        if s:ClearNotes(l:lnum, l:from, l:to) && empty(l:start)
+            let l:start = [l:lnum, l:from]
+        endif
+    endfor
+    if !empty(l:start)
+        call cursor(l:start)
+    endif
+endfunction
+
+" Replaces everything but bars in columns from to to of line lnum with '-'.
+" Returns whether there was anything to clear.
+function! s:ClearNotes(lnum, from, to)
+    if a:from > a:to
+        return 0
+    endif
+    let l:line = getline(a:lnum)
+    let l:notes = substitute(l:line[a:from - 1 : a:to - 1], '[^|]', '-', 'g')
+    call setline(a:lnum, l:line[: a:from - 2] . l:notes . l:line[a:to :])
+    return 1
 endfunction
 
 function! s:HyphenChange(type)
-    silent execute 'normal! `[v`]r-'
+    call s:HyphenDelete(a:type)
     startgreplace
 endfunction
 
@@ -184,8 +221,10 @@ inoremap <buffer> <expr> <Space> <SID>OnStringLine() ? '-' : '<Space>'
 " replace deleted things with hyphens
 " <C-u> drops the count from the command line, so pass it on to g@.
 nnoremap <buffer> <silent> <expr> d <SID>OnStringLine() ? ':<C-u>set opfunc=<SID>HyphenDelete<CR>' . v:count1 . 'g@' : 'd'
+nnoremap <buffer> <silent> <expr> dd <SID>OnStringLine() ? ':<C-u>set opfunc=<SID>HyphenDelete<CR>' . v:count1 . 'g@_' : 'dd'
 vnoremap <buffer> <silent> <expr> d <SID>OnStringLine() ? 'r-:<C-u>call <SID>ClearVisualNames()<CR>' : 'd'
 nnoremap <buffer> <silent> <expr> c <SID>OnStringLine() ? ':<C-u>set opfunc=<SID>HyphenChange<CR>' . v:count1 . 'g@' : 'c'
+nnoremap <buffer> <silent> <expr> cc <SID>OnStringLine() ? ':<C-u>set opfunc=<SID>HyphenChange<CR>' . v:count1 . 'g@_' : 'cc'
 vnoremap <buffer> <silent> <expr> c <SID>OnStringLine() ? 'r-:<C-u>call <SID>ClearVisualNames()<CR>gR' : 'c'
 nnoremap <buffer> <expr> C <SID>OnStringLine() ? 'v$r-gR' : 'C'
 nnoremap <buffer> <expr> x <SID>OnStringLine() ? 'r-' : 'x'

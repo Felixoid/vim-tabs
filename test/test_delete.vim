@@ -255,14 +255,169 @@ function! Test_V_c_clears_column_and_replaces()
     call ExpectCursor(3, 4)
 endfunction
 
-" Known bugs.
-
-function! XFail_linewise_d_must_keep_string_names()
+function! Test_linewise_d_clears_notes_and_keeps_bars()
     call Given(g:even, 4, 4)
     call Keys('dj')
-    call assert_match('^B|', getline(4))
-    call assert_match('^G|', getline(5))
+    let l:want =<< trim END
+        []
+           Am  C7  G
+        e|-0-1-2-3|4-5-6-7-|
+        B|--------|--------|
+        G|--------|--------|
+        D|-0-1-2-3|4-5-6-7-|
+        A|-0-1-2-3|4-5-6-7-|
+        E|-0-1-2-3|4-5-6-7-|
+        lyrics
+    END
+    call ExpectBuffer(l:want)
+    call ExpectCursor(4, 3)
 endfunction
+
+function! Test_linewise_d_keeps_lines_below_the_staff()
+    call Given(g:even, 8, 4)
+    call Keys('dj')
+    let l:want =<< trim END
+        []
+           Am  C7  G
+        e|-0-1-2-3|4-5-6-7-|
+        B|-0-1-2-3|4-5-6-7-|
+        G|-0-1-2-3|4-5-6-7-|
+        D|-0-1-2-3|4-5-6-7-|
+        A|-0-1-2-3|4-5-6-7-|
+        E|--------|--------|
+        lyrics
+    END
+    call ExpectBuffer(l:want)
+    call ExpectCursor(8, 3)
+endfunction
+
+function! Test_d_paragraph_clears_only_strings()
+    call Given(g:even, 4, 4)
+    call Keys('dap')
+    let l:want =<< trim END
+        []
+           Am  C7  G
+        e|--------|--------|
+        B|--------|--------|
+        G|--------|--------|
+        D|--------|--------|
+        A|--------|--------|
+        E|--------|--------|
+        lyrics
+    END
+    call ExpectBuffer(l:want)
+    call ExpectCursor(3, 3)
+endfunction
+
+function! Test_dd_clears_the_string()
+    call Given(g:even, 6, 6)
+    call Keys('dd')
+    let l:want =<< trim END
+        []
+           Am  C7  G
+        e|-0-1-2-3|4-5-6-7-|
+        B|-0-1-2-3|4-5-6-7-|
+        G|-0-1-2-3|4-5-6-7-|
+        D|--------|--------|
+        A|-0-1-2-3|4-5-6-7-|
+        E|-0-1-2-3|4-5-6-7-|
+        lyrics
+    END
+    call ExpectBuffer(l:want)
+    call ExpectCursor(6, 3)
+endfunction
+
+function! Test_dd_with_count()
+    call Given(g:even, 5, 6)
+    call Keys('2dd')
+    let l:want =<< trim END
+        []
+           Am  C7  G
+        e|-0-1-2-3|4-5-6-7-|
+        B|-0-1-2-3|4-5-6-7-|
+        G|--------|--------|
+        D|--------|--------|
+        A|-0-1-2-3|4-5-6-7-|
+        E|-0-1-2-3|4-5-6-7-|
+        lyrics
+    END
+    call ExpectBuffer(l:want)
+    call ExpectCursor(5, 3)
+endfunction
+
+function! Test_linewise_c_replaces_from_column_3()
+    call Given(g:even, 4, 4)
+    call Keys("cj9\<Esc>")
+    let l:want =<< trim END
+        []
+           Am  C7  G
+        e|-0-1-2-3|4-5-6-7-|
+        B|9-------|--------|
+        G|--------|--------|
+        D|-0-1-2-3|4-5-6-7-|
+        A|-0-1-2-3|4-5-6-7-|
+        E|-0-1-2-3|4-5-6-7-|
+        lyrics
+    END
+    call ExpectBuffer(l:want)
+    call ExpectCursor(4, 3)
+endfunction
+
+function! Test_cc_replaces_the_string()
+    call Given(g:even, 6, 4)
+    call Keys("cc9\<Esc>")
+    let l:want =<< trim END
+        []
+           Am  C7  G
+        e|-0-1-2-3|4-5-6-7-|
+        B|-0-1-2-3|4-5-6-7-|
+        G|-0-1-2-3|4-5-6-7-|
+        D|9-------|--------|
+        A|-0-1-2-3|4-5-6-7-|
+        E|-0-1-2-3|4-5-6-7-|
+        lyrics
+    END
+    call ExpectBuffer(l:want)
+    call ExpectCursor(6, 3)
+endfunction
+
+function! Test_d_motion_keeps_bars()
+    call Given(g:even, 4, 4)
+    call Keys("d/5\<CR>")
+    let l:want =<< trim END
+        []
+           Am  C7  G
+        e|-0-1-2-3|4-5-6-7-|
+        B|--------|--5-6-7-|
+        G|-0-1-2-3|4-5-6-7-|
+        D|-0-1-2-3|4-5-6-7-|
+        A|-0-1-2-3|4-5-6-7-|
+        E|-0-1-2-3|4-5-6-7-|
+        lyrics
+    END
+    call ExpectBuffer(l:want)
+    call ExpectCursor(4, 4)
+endfunction
+
+function! Test_d_motion_across_strings()
+    call Given(g:even, 4, 14)
+    call Keys("d/1\<CR>")
+    let l:want =<< trim END
+        []
+           Am  C7  G
+        e|-0-1-2-3|4-5-6-7-|
+        B|-0-1-2-3|4-------|
+        G|---1-2-3|4-5-6-7-|
+        D|-0-1-2-3|4-5-6-7-|
+        A|-0-1-2-3|4-5-6-7-|
+        E|-0-1-2-3|4-5-6-7-|
+        lyrics
+    END
+    call ExpectBuffer(l:want)
+    call ExpectCursor(4, 14)
+endfunction
+
+" Known bugs.
 
 function! XFail_x_must_keep_string_name()
     call Given(g:even, 6, 1)
