@@ -62,7 +62,7 @@ On string lines the usual editing commands are remapped so the tab keeps its sha
 - `X`: clear the column under the cursor on all six strings, together with the chord name that starts in it, and move to the next column. A count clears that many columns.
 - `d{motion}`: replace the notes the motion covers with hyphens. Bars stay, and only string lines change, so `d}` clears the staff but keeps the lyrics. `dd` clears the whole string; `3dd` clears three strings.
 - `c{motion}`, `cc`: the same as `d`, then start Replace mode at the first cleared character.
-- `C`: replace everything from the cursor to the end of the string with hyphens, then start Replace mode.
+- `C`: the same as `c$`: clear the notes from the cursor to the end of the string, keeping the bars, then start Replace mode. A count reaches into the strings below, like `2C`.
 - `d`, `c` in Visual mode: replace the selection with hyphens, bars included. A blockwise selection over all six strings also removes the chord names that start in it.
 
 ### Selecting and yanking
@@ -101,11 +101,11 @@ Add your own chords by setting `g:Chords` in your vimrc. Each entry lists the fr
 ```vim
 let g:Chords = {
 \    'A7': ['0', '2', '0', '2', '0'],
-\    'G':  ['3', '0', '0', '0', '2', '3'],
+\    'C':  ['3', '1', '0', '2', '3'],
 \}
 ```
 
-Your chords are added to the built in ones and win when the names match, like `G` above. The plugin reads `g:Chords` each time it opens a `.tab` file, so your vimrc is the right place for it.
+Your chords are added to the built in ones and win when the names match, like `C` above. The plugin reads `g:Chords` each time it opens a `.tab` file, so your vimrc is the right place for it.
 
 Turning the Plugin Off
 ----------------------

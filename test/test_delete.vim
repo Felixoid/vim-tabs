@@ -175,11 +175,39 @@ function! Test_C_puts_hyphens_to_end_and_replaces()
         e|-0-1-2-3|4-5-6-7-|
         B|-0-1-2-3|4-5-6-7-|
         G|-0-1-2-3|4-5-6-7-|
-        D|-0-1-2-3|9--------
+        D|-0-1-2-3|9-------|
         A|-0-1-2-3|4-5-6-7-|
         E|-0-1-2-3|4-5-6-7-|
         lyrics
     END
+    call ExpectBuffer(l:want)
+    call ExpectCursor(6, 12)
+endfunction
+
+function! Test_C_keeps_bars()
+    call Given(g:even, 6, 6)
+    call Keys("C9\<Esc>")
+    let l:want = copy(g:even)
+    let l:want[5] = 'D|-0-9----|--------|'
+    call ExpectBuffer(l:want)
+    call ExpectCursor(6, 6)
+endfunction
+
+function! Test_C_on_string_name_starts_at_column_3()
+    call Given(g:even, 6, 1)
+    call Keys("C9\<Esc>")
+    let l:want = copy(g:even)
+    let l:want[5] = 'D|9-------|--------|'
+    call ExpectBuffer(l:want)
+    call ExpectCursor(6, 3)
+endfunction
+
+function! Test_C_with_count()
+    call Given(g:even, 6, 12)
+    call Keys("2C9\<Esc>")
+    let l:want = copy(g:even)
+    let l:want[5] = 'D|-0-1-2-3|9-------|'
+    let l:want[6] = 'A|--------|--------|'
     call ExpectBuffer(l:want)
     call ExpectCursor(6, 12)
 endfunction

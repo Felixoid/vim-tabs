@@ -267,7 +267,7 @@ vnoremap <buffer> <silent> <expr> d <SID>OnStringLine() ? 'r-:<C-u>call <SID>Cle
 nnoremap <buffer> <silent> <expr> c <SID>OnStringLine() ? ':<C-u>set opfunc=<SID>HyphenChange<CR>' . v:count1 . 'g@' : 'c'
 nnoremap <buffer> <silent> <expr> cc <SID>OnStringLine() ? ':<C-u>set opfunc=<SID>HyphenChange<CR>' . v:count1 . 'g@_' : 'cc'
 vnoremap <buffer> <silent> <expr> c <SID>OnStringLine() ? 'r-:<C-u>call <SID>ClearVisualNames()<CR>gR' : 'c'
-nnoremap <buffer> <expr> C <SID>OnStringLine() ? 'v$r-gR' : 'C'
+nnoremap <buffer> <silent> <expr> C <SID>OnStringLine() ? ':<C-u>set opfunc=<SID>HyphenChange<CR>' . v:count1 . 'g@$' : 'C'
 nnoremap <buffer> <expr> x !<SID>OnStringLine() ? 'x' : <SID>OnNameOrBar() ? '' : 'r-'
 nnoremap <buffer> <expr> s !<SID>OnStringLine() ? 's' : <SID>OnNameOrBar() ? '' : 'r-gR'
 nnoremap <buffer> <silent> <expr> X <SID>OnStringLine() ? ':<C-u>call <SID>ClearColumns(' . v:count1 . ')<CR>' : 'X'

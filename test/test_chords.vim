@@ -46,7 +46,7 @@ function! Test_user_chords_extend_defaults()
     let l:want =<< trim END
         []
            X   G
-        e|-9---1---|
+        e|-9---3---|
         B|-----0---|
         G|-----0---|
         D|-----0---|
