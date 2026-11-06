@@ -60,13 +60,12 @@ function! tabs#DrawBars()
 endfunction
 
 " Extends the strings of the current staff that are shorter than width with '-'.
-" search() keeps the cursor, so it's safe in Insert mode.
+" It doesn't move the cursor, so it's safe in Insert mode.
 function! s:PadStaff(width)
-    let l:top = search('\C^' . s:tuning[0] . '|', 'bcnW')
-    if l:top == 0
+    if !s:OnStringLine()
         return
     endif
-    for l:lnum in range(l:top, l:top + len(s:tuning) - 1)
+    for l:lnum in range(s:StaffTop(line('.')), s:StaffBottom(line('.')))
         let l:line = getline(l:lnum)
         if strlen(l:line) < a:width
             call setline(l:lnum, l:line . repeat('-', a:width - strlen(l:line)))
@@ -92,6 +91,23 @@ function! s:IsString(line)
     return a:line =~# '^[a-gA-G]|'
 endfunction
 
+" A staff is the run of string lines around lnum, whatever their names.
+function! s:StaffTop(lnum)
+    let l:lnum = a:lnum
+    while s:IsString(getline(l:lnum - 1))
+        let l:lnum -= 1
+    endwhile
+    return l:lnum
+endfunction
+
+function! s:StaffBottom(lnum)
+    let l:lnum = a:lnum
+    while s:IsString(getline(l:lnum + 1))
+        let l:lnum += 1
+    endwhile
+    return l:lnum
+endfunction
+
 " Insert mode keys for moving one string down (step 1) or up (-1). They do
 " nothing at the staff edges, where typing would overwrite lyrics or chord names.
 function! s:StringStep(key, step)
@@ -99,10 +115,6 @@ function! s:StringStep(key, step)
         return a:key
     endif
     return s:IsString(getline(line('.') + a:step)) ? "\<C-\>\<C-o>" . (a:step > 0 ? 'j' : 'k') : ''
-endfunction
-
-function! s:OnFirstLine()
-    return getline('.')[0:1] ==# s:tuning[0] . '|'
 endfunction
 
 " Opfunc for d: clears the notes the motion covers. Only string lines change,
@@ -147,16 +159,12 @@ function! s:HyphenChange(type)
     startgreplace
 endfunction
 
-" Pads the staff first, so the e string reaches the column and block commands
+" Pads the staff first, so the top string reaches the column and block commands
 " from there cover all strings.
 function! s:ToFirstLine()
     let l:col = col('.')
     call s:PadStaff(l:col)
-    if s:OnFirstLine()
-        return
-    endif
-    call search('\C^' . s:tuning[0] . '|', 'bW')
-    call cursor(line('.'), l:col)
+    call cursor(s:StaffTop(line('.')), l:col)
 endfunction
 
 function! s:Chord(Letter)
@@ -216,9 +224,10 @@ function! s:ClearNames(first, last)
     call setpos('.', l:pos)
 endfunction
 
-" Only a block over all six strings removes whole chords.
+" Only a block over the whole staff removes whole chords.
 function! s:ClearVisualNames()
-    if visualmode() !=# "\<C-v>" || !s:OnFirstLine() || line("'>") - line("'<") < 5
+    let l:top = line("'<")
+    if visualmode() !=# "\<C-v>" || l:top != s:StaffTop(l:top) || line("'>") != s:StaffBottom(l:top)
         return
     endif
     call s:ClearNames(min([col("'<"), col("'>")]), max([col("'<"), col("'>")]))

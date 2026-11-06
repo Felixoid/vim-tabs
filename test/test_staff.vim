@@ -44,3 +44,44 @@ function! Test_leader_cr_adds_no_blank_lines_when_enough()
     call ExpectBuffer(['[]', '', ''] + s:Staff('9', 2) + ['', '', 'text'])
     call ExpectCursor(4, 3)
 endfunction
+
+" The staff is found by its string lines, not by the e| name: these name the
+" high string E and the low one e.
+function! Test_staff_with_E_on_top()
+    let l:tab =<< trim END
+        [Part I]
+        E||--0------0---------|
+        B||--0---0--0---------|
+        G||--2---2--2---------|
+        D||--2------2---------|
+        A||--0------0---------|
+        e||-------------------|
+
+        E|--0------0------------|
+        B|--4------4---------6--|
+        G|--2---2--2------------|
+        D|--1------1------------|
+        A|--0------0------------|
+        e|----------------------|
+    END
+    call Given(l:tab, 9, 10)
+    call Keys('-|')
+    let l:want =<< trim END
+        [Part I]
+        E||--0------0---------|
+        B||--0---0--0---------|
+        G||--2---2--2---------|
+        D||--2------2---------|
+        A||--0------0---------|
+        e||-------------------|
+
+        E|--0----|-0------------|
+        B|--4----|-4---------6--|
+        G|--2---2|-2------------|
+        D|--1----|-1------------|
+        A|--0----|-0------------|
+        e|-------|--------------|
+    END
+    call ExpectBuffer(l:want)
+    call ExpectCursor(9, 10)
+endfunction
