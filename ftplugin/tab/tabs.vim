@@ -10,17 +10,45 @@ let b:did_ftplugin = 1
 let s:tuning = ['e', 'B', 'G', 'D', 'A', 'E']
 
 function! s:InitTab(length)
-    silent execute "normal! i[]\<CR>\<CR>"
-    call tabs#DrawStrings(a:length)
-    " reset position
-    silent execute 'normal! ggl'
+    call setline(1, ['[]', ''])
+    call tabs#DrawStrings(2, a:length)
+    call append('$', '')
+    call cursor(1, 2)
     startinsert
 endfunction
 
-function! tabs#DrawStrings(length)
-    for l:string in s:tuning
-        silent execute 'normal! i' . l:string . "|\<C-o>" . a:length . "a-\<Esc>a|\<Esc>o"
-    endfor
+" Appends a staff of length hyphens per string after line lnum.
+function! tabs#DrawStrings(lnum, length)
+    let l:line = '|' . repeat('-', a:length) . '|'
+    call append(a:lnum, map(copy(s:tuning), 'v:val . l:line'))
+endfunction
+
+" On a staff, the new one goes below its paragraph, keeping lyrics with their
+" staff; elsewhere below the cursor line. It gets at least two blank lines on
+" each side, the buffer edges counting as blank.
+function! s:NewStaff(length)
+    let l:after = line('.')
+    if s:OnStringLine()
+        let l:blank = search('^\s*$', 'nW')
+        let l:after = l:blank ? l:blank - 1 : line('$')
+    endif
+    let l:above = s:CountBlank(l:after, -1)
+    let l:below = s:CountBlank(l:after + 1, 1)
+    call append(l:after, repeat([''], 2 - l:below))
+    call tabs#DrawStrings(l:after, a:length)
+    call append(l:after, repeat([''], 2 - l:above))
+    call cursor(l:after + 2 - l:above + 1, 3)
+    startgreplace
+endfunction
+
+" Counts up to two blank lines from lnum on, in direction step. getline()
+" returns '' past the buffer edges, so they count as blank.
+function! s:CountBlank(lnum, step)
+    let l:n = 0
+    while l:n < 2 && getline(a:lnum + l:n * a:step) =~# '^\s*$'
+        let l:n += 1
+    endwhile
+    return l:n
 endfunction
 
 function! tabs#DrawBars()
@@ -202,6 +230,9 @@ endfor
 " Mapping to draw bars with -| in normal mode and | in insert/replace mode
 nnoremap <buffer> <silent> <expr> <localleader><Bar> <SID>OnStringLine() ? ':<C-u>call tabs#DrawBars()<CR>' : ''
 inoremap <buffer> <silent> <expr> <Bar> <SID>OnStringLine() ? '<C-\><C-o>:<C-u>call tabs#DrawBars()<CR><Right>' : '<Bar>'
+
+" [count]-<CR> adds a staff, count hyphens wide
+nnoremap <buffer> <silent> <localleader><CR> :<C-u>call <SID>NewStaff(v:count ? v:count : 60)<CR>
 
 " selections
 nnoremap <buffer> <silent> <expr> <S-v> <SID>OnStringLine() ? ':<C-u>call <SID>ToFirstLine()<CR><C-v>5j' : '<S-v>'
